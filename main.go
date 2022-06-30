@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,5 +32,5 @@ func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 
-	router.Run("localhost:8080")
+	router.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }

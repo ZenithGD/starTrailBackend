@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 // album represents data about a record album.
@@ -29,6 +30,8 @@ func getAlbums(c *gin.Context) {
 }
 
 func main() {
+	godotenv.Load()
+
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 

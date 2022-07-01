@@ -1,9 +1,9 @@
 package database
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,19 +18,16 @@ func GetDB() (*gorm.DB, error) {
 	var err error
 	if db == nil {
 		// Initialize database if it hasn't been yet initialized
-		dsn := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-			os.Getenv("POSTGRES_USER"),
-			os.Getenv("POSTGRES_PASSWORD"),
-			os.Getenv("POSTGRES_DB"),
-			os.Getenv("POSTGRES_PORT"))
+		dsn := os.Getenv("DATABASE_URL")
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 		// On error return inmediately
 		if err != nil {
 			return nil, err
 		}
-	}
 
+		logrus.Info("Database initialized successfully")
+	}
 	// On success, return database object
 	return db, nil
 }

@@ -3,8 +3,10 @@ module startrail
 go 1.18
 
 require (
+	github.com/TwiN/go-color v1.1.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.4.0
+	github.com/sirupsen/logrus v1.8.1
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/gorm v1.23.6
 )

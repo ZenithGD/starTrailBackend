@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"startrail/database"
+	database "startrail/database"
 	"startrail/models"
 
 	"github.com/gin-gonic/gin"

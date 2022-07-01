@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - '5001:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./database/create.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./database/insert.sql:/docker-entrypoint-initdb.d/fill_tables.sql
+volumes:
+  db:
+    driver: local

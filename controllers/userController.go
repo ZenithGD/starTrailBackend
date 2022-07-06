@@ -10,6 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type RegisterForm struct {
+	Nickname string `json:"nickname" binding:"required"`
+	Email    string `json:"email"    binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Descr    string `json:"description"`
+}
+
 func RegisterUser(c *gin.Context) {
 	// Get database instance
 	db, err := database.GetDB()
@@ -19,22 +26,26 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	// Bind JSON body to variable
-	var user models.User
+	var user RegisterForm
 	err = c.BindJSON(&user)
 	if err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Println(user)
-
+	userData := models.User{
+		Nickname: user.Nickname,
+		Email:    user.Email,
+		Password: user.Password,
+		Descr:    user.Descr,
+	}
 	// Create record
-	err = db.Create(&user).Error
+	err = db.Create(&userData).Error
 	if err != nil {
 		// Handle error
 		c.Status(http.StatusConflict)
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"msg": "OK"})
 }

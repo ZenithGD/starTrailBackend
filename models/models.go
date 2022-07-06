@@ -5,5 +5,5 @@ type User struct {
 	Nickname string
 	Email    string
 	Password string
-	Descr    string `json:"description"`
+	Descr    string
 }

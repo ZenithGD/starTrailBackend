@@ -6,6 +6,7 @@ import (
 	"os"
 	database "startrail/database"
 	"startrail/models"
+	crypt "startrail/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,11 @@ type RegisterForm struct {
 	Descr    string `json:"description"`
 }
 
+type LoginForm struct {
+	Nickname string `json:"nickname" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func RegisterUser(c *gin.Context) {
 	// Get database instance
 	db, err := database.GetDB()
@@ -26,26 +32,51 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	// Bind JSON body to variable
-	var user RegisterForm
-	err = c.BindJSON(&user)
+	var userForm RegisterForm
+	err = c.BindJSON(&userForm)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	encryptedPass, err := crypt.Encrypt(userForm.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
 	userData := models.User{
-		Nickname: user.Nickname,
-		Email:    user.Email,
-		Password: user.Password,
-		Descr:    user.Descr,
+		Nickname: userForm.Nickname,
+		Email:    userForm.Email,
+		Password: string(encryptedPass),
+		Descr:    userForm.Descr,
 	}
 	// Create record
 	err = db.Create(&userData).Error
 	if err != nil {
 		// Handle error
-		c.Status(http.StatusConflict)
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"msg": "OK"})
+}
+
+func LoginUser(c *gin.Context) {
+	// Get database instance
+	db, err := database.GetDB()
+	if err != nil {
+		fmt.Printf("Error while getting database: %v", err)
+		os.Exit(1)
+	}
+
+	var userForm LoginForm
+	err = c.BindJSON(&userForm)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var dest models.User
+	db.First(&dest, "nickname = ?", userForm.Nickname)
+
 }

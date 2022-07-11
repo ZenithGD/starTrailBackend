@@ -27,6 +27,7 @@ func main() {
 	userGroup := router.Group("/user")
 	{
 		userGroup.POST("/register", usercontroller.RegisterUser)
+		userGroup.POST("/login", usercontroller.LoginUser)
 	}
 
 	router.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))

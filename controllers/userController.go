@@ -1,6 +1,7 @@
 package usercontroller
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,6 +10,8 @@ import (
 	crypt "startrail/utils"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type RegisterForm struct {
@@ -23,6 +26,7 @@ type LoginForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// Register a new user into the system
 func RegisterUser(c *gin.Context) {
 	// Get database instance
 	db, err := database.GetDB()
@@ -61,6 +65,7 @@ func RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"msg": "OK"})
 }
 
+// Login user if it exists and the provided credentials are correct.
 func LoginUser(c *gin.Context) {
 	// Get database instance
 	db, err := database.GetDB()
@@ -69,6 +74,7 @@ func LoginUser(c *gin.Context) {
 		os.Exit(1)
 	}
 
+	// Bind JSON body to variable
 	var userForm LoginForm
 	err = c.BindJSON(&userForm)
 	if err != nil {
@@ -76,7 +82,27 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
+	// Find user
 	var dest models.User
-	db.First(&dest, "nickname = ?", userForm.Nickname)
+	result := db.First(&dest, "nickname = ?", userForm.Nickname)
+	if result != nil {
+		err = bcrypt.CompareHashAndPassword([]byte(dest.Password), []byte(userForm.Password))
+	}
 
+	// Error if user doesn't exist or passwords don't match
+	if err != nil || errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect username and/or password"})
+		return
+	}
+
+	// Sign token on credential match
+	token, err := crypt.SignToken(userForm.Nickname)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token sign error"})
+		return
+	}
+
+	// Send response back
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
+	c.JSON(http.StatusOK, gin.H{"msg": "OK"})
 }
